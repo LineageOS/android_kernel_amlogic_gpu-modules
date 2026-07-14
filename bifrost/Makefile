@@ -46,6 +46,7 @@ modules:
 	EXTRA_LDFLAGS+="--strip-debug" \
 	CONFIG_MALI_MIDGARD=m CONFIG_MALI_PLATFORM_DEVICETREE=y CONFIG_MALI_MIDGARD_DVFS=y CONFIG_MALI_BACKEND=gpu CONFIG_MALI_GATOR_SUPPORT=y CONFIG_LARGE_PAGE_SUPPORT=0 CONFIG_MALI_PLATFORM_NAME="devicetree" \
 	    CONFIG_MALI_REAL_HW=y CONFIG_MALI_TRACE_POWER_GPU_WORK_PERIOD=y \
+	    KBUILD_EXTRA_SYMBOLS=$(abspath $(out_dir)/../common_drivers/Module.symvers) \
 
 modules_install:
 	$(MAKE) INSTALL_MOD_STRIP=1 M=$(M)/$(GPU_DRV_VERSION)/kernel/drivers/gpu/arm/midgard -C $(KERNEL_SRC) modules_install
@@ -54,6 +55,9 @@ modules_install:
 		cd ${out_dir}/$(M)/; find -name "*.ko" -exec cp {} ${out_dir}/../vendor_lib/modules/mali.ko \; ; \
 	else \
 		find $(INSTALL_MOD_PATH)/lib/modules/*/$(INSTALL_MOD_DIR) -name "*.ko" -exec cp {} ${out_dir}/../vendor_lib/modules/mali.ko \; ; \
+	fi
+	if [ -e ${out_dir}/$(M)/$(GPU_DRV_VERSION)/kernel/drivers/gpu/arm/midgard/Module.symvers ]; then \
+		ln -sf ${out_dir}/$(M)/$(GPU_DRV_VERSION)/kernel/drivers/gpu/arm/midgard/Module.symvers ${out_dir}/$(M)/Module.symvers; \
 	fi
 
 

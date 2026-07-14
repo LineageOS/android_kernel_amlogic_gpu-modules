@@ -1,7 +1,7 @@
-load("//build/kernel/kleaf:kernel.bzl", "kernel_module")
+exports_files(["Makefile"])
 
-kernel_module(
-    name = "gpu",
+filegroup(
+    name = "bifrost_srcs",
     srcs = glob(
         ["**"],
         exclude = [
@@ -9,13 +9,8 @@ kernel_module(
             "**/*.bzl",
             "**/*.mk",
             "**/*.bp",
+            ".git/**",
         ],
     ),
-    outs = [
-        "mali_kbase.ko",
-    ],
-    kernel_build = "//common:amlogic",
-    visibility = [
-        "//common:__pkg__",
-    ],
+    visibility = ["//visibility:public"],
 )
