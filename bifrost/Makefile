@@ -27,9 +27,6 @@ EXTRA_INCLUDE := -I$(KERNEL_SRC)/$(M)/../bifrost/$(GPU_DRV_VERSION)/kernel/drive
                  -I$(KERNEL_SRC)/$(M)/../bifrost/$(GPU_DRV_VERSION)/kernel/include
 
 KBUILD_CFLAGS_MODULE += $(GKI_EXT_MODULE_PREDEFINE)
-$(warning "CC:"$(CC) )
-$(warning "HOSTCC:"$(HOSTCC) )
-$(warning "CROSS_COMPILE:"$(CROSS_COMPILE) )
 
 ifeq ($(O),)
 out_dir := .
