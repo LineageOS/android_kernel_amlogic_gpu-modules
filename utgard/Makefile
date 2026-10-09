@@ -19,30 +19,44 @@ GPU_TYPE:=mali450
 GPU_ARCH:=utgard
 GPU_DRV_VERSION?=r10p2
 
-EXTRA_INCLUDE := -I$(KERNEL_SRC)/$(M)/../utgard/$(GPU_DRV_VERSION)/include \
-		 -I$(KERNEL_SRC)/$(M)/../utgard/$(GPU_DRV_VERSION)/linux/license/gpl \
-		 -I$(KERNEL_SRC)/$(M)/../utgard/$(GPU_DRV_VERSION)/common \
-		 -I$(KERNEL_SRC)/$(M)/../utgard/$(GPU_DRV_VERSION)/linux \
-		 -I$(KERNEL_SRC)/$(M)/../utgard/$(GPU_DRV_VERSION) \
-		 -I$(KERNEL_SRC)/$(M)/../utgard/platform/meson_bu
+ifeq ($(O),)
+out_dir := .
+else
+out_dir := $(O)
+endif
+
+MALI_SRC := $(KERNEL_SRC)/$(M)/$(GPU_DRV_VERSION)
+MALI_PLAT := $(KERNEL_SRC)/$(M)/platform
+MALI_OUT := $(abspath $(out_dir)/$(M)/$(GPU_DRV_VERSION))
+
+EXTRA_INCLUDE := -I$(MALI_OUT)/include \
+		 -I$(MALI_OUT)/linux/license/gpl \
+		 -I$(MALI_OUT)/common \
+		 -I$(MALI_OUT)/linux \
+		 -I$(MALI_OUT) \
+		 -I$(MALI_OUT)/platform/meson_bu
 
 KBUILD_CFLAGS_MODULE += $(GKI_EXT_MODULE_PREDEFINE)
- $(warning "mali the value of KERNEL_SRC is $(KERNEL_SRC)")
- $(warning "mali the value of M is $(M)")
- $(warning "mali the value of OUT_DIR is ${OUT_DIR}")
+
 modules:
-	cd $(KERNEL_SRC)/$(M)/$(GPU_DRV_VERSION); \
-	ln -s $(KERNEL_SRC)/$(M)/platform platform; \
-	$(MAKE) -C $(KERNEL_SRC) M=$(M)/$(GPU_DRV_VERSION)  \
+	mkdir -p $(MALI_OUT)
+	cp -rL -u $(MALI_SRC)/. $(MALI_OUT)/
+	cp -rL -u $(MALI_PLAT) $(MALI_OUT)/
+	$(MAKE) -C $(KERNEL_SRC) M=$(MALI_OUT) \
 	EXTRA_CFLAGS="-DCONFIG_MALI400=m -DCONFIG_MALI450=m" \
 	EXTRA_CFLAGS+="-Wno-error -Wno-pointer-sign -Wno-error=frame-larger-than= $(EXTRA_INCLUDE) $(KBUILD_CFLAGS_MODULE)" \
 	EXTRA_LDFLAGS+="--strip-debug" \
-	CONFIG_MALI400=m  CONFIG_MALI450=m CONFIG_AM_VDEC_H264_4K2K=y modules
+	CONFIG_MALI400=m CONFIG_MALI450=m CONFIG_AM_VDEC_H264_4K2K=y \
+	KBUILD_EXTRA_SYMBOLS=$(abspath $(out_dir)/../common_drivers/Module.symvers) \
+	modules
+	ln -sf $(MALI_OUT)/Module.symvers $(abspath $(out_dir)/$(M))/Module.symvers
+
+all: modules
 
 modules_install:
-	@$(MAKE) INSTALL_MOD_STRIP=1 M=$(M)/$(GPU_DRV_VERSION) -C $(KERNEL_SRC) modules_install
-	mkdir -p ${OUT_DIR}/../vendor_lib/modules
-	cd ${OUT_DIR}/$(M)/; find -name "*.ko" -exec cp {} ${OUT_DIR}/../vendor_lib/modules/mali.ko \;
+	$(MAKE) INSTALL_MOD_STRIP=1 M=$(MALI_OUT) -C $(KERNEL_SRC) modules_install
 
 clean:
-	$(MAKE) -C $(KERNEL_SRC) M=$(M)/$(GPU_DRV_VERSION) clean
+	rm -rf $(MALI_OUT)
+
+.PHONY: modules all modules_install clean
